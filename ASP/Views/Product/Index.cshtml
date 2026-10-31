@@ -1,0 +1,410 @@
+@model List<Item>
+@{
+    ViewData["Title"] = "Список продуктов";
+    
+    // Вычисляем параметры сортировки для заголовков таблицы
+    string currentSort = ViewBag.SortBy ?? "";
+    string nameSort = string.IsNullOrEmpty(currentSort) || currentSort == "name_asc" ? "name_desc" : "name_asc";
+    string priceSort = currentSort == "price_asc" ? "price_desc" : "price_asc";
+    string quantitySort = currentSort == "quantity_asc" ? "quantity_desc" : "quantity_asc";
+    string dateSort = currentSort == "date_asc" ? "date_desc" : "date_asc";
+}
+
+<!-- Вывод сводных ошибок валидации (например, при импорте/экспорте) -->
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Произошла ошибка!</h5>
+        <div asp-validation-summary="All" class="mb-0"></div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-box-fill text-primary"></i> Складские запасы</h2>
+    <a asp-action="NewItem" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Добавить новый товар
+    </a>
+</div>
+
+<!-- Панель поиска и фильтрации -->
+<div class="card mb-4">
+    <form method="get" asp-action="Index" class="row g-2 align-items-center">
+        <div class="col-md-9">
+            <div class="input-group">
+                <span class="input-group-text bg-tertiary border-color"><i class="bi bi-search text-secondary"></i></span>
+                <input type="text" name="searchString" value="@ViewBag.SearchString" class="form-control" placeholder="Поиск товара по названию или описанию..." autocomplete="off" />
+            </div>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-funnel"></i> Найти
+            </button>
+            @if (!string.IsNullOrEmpty(ViewBag.SearchString))
+            {
+                <a href="@Url.Action("Index", new { sortBy = ViewBag.SortBy })" class="btn btn-secondary">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            }
+        </div>
+        <!-- Сохраняем сортировку во время поиска -->
+        <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+    </form>
+</div>
+
+<!-- Таблица товаров -->
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 20%;">
+                    <a class="sort-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = nameSort, page = ViewBag.CurrentPage })">
+                        Название
+                        @if (currentSort == "name_desc") { <i class="bi bi-sort-alpha-down-alt text-primary"></i> }
+                        else if (currentSort == "name_asc" || string.IsNullOrEmpty(currentSort)) { <i class="bi bi-sort-alpha-down text-primary"></i> }
+                        else { <i class="bi bi-arrow-down-up small text-muted"></i> }
+                    </a>
+                </th>
+                <th class="text-center" style="width: 25%;">Описание</th>
+                <th class="text-center" style="width: 12%;">
+                    <a class="sort-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = priceSort, page = ViewBag.CurrentPage })">
+                        Цена (руб.)
+                        @if (currentSort == "price_desc") { <i class="bi bi-sort-numeric-down-alt text-primary"></i> }
+                        else if (currentSort == "price_asc") { <i class="bi bi-sort-numeric-down text-primary"></i> }
+                        else { <i class="bi bi-arrow-down-up small text-muted"></i> }
+                    </a>
+                </th>
+                <th class="text-center" style="width: 12%;">
+                    <a class="sort-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = quantitySort, page = ViewBag.CurrentPage })">
+                        На складе
+                        @if (currentSort == "quantity_desc") { <i class="bi bi-sort-numeric-down-alt text-primary"></i> }
+                        else if (currentSort == "quantity_asc") { <i class="bi bi-sort-numeric-down text-primary"></i> }
+                        else { <i class="bi bi-arrow-down-up small text-muted"></i> }
+                    </a>
+                </th>
+                <th class="text-center" style="width: 15%;">
+                    <a class="sort-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = dateSort, page = ViewBag.CurrentPage })">
+                        Изменено
+                        @if (currentSort == "date_desc") { <i class="bi bi-calendar-event-fill text-primary"></i> }
+                        else if (currentSort == "date_asc") { <i class="bi bi-calendar-event text-primary"></i> }
+                        else { <i class="bi bi-arrow-down-up small text-muted"></i> }
+                    </a>
+                </th>
+                <th class="text-center" style="width: 16%;">Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-secondary">
+                        <i class="bi bi-box-open fs-2 d-block mb-2"></i>
+                        Товары не найдены
+                    </td>
+                </tr>
+            }
+            @foreach (var item in Model)
+            {
+                if (ViewBag.editId == item.IdItem)
+                {
+                    <!-- Строка в режиме РЕДАКТИРОВАНИЯ -->
+                    <tr>
+                        <form method="post" asp-controller="Product" asp-action="EditItem">
+                            <!-- Скрытые поля для передачи ID, текущего количества товара и параметров пагинации/поиска -->
+                            <input type="hidden" name="IdItem" value="@item.IdItem" />
+                            <input type="hidden" name="Quantity" value="@item.Quantity" />
+                            <input type="hidden" name="searchString" value="@ViewBag.SearchString" />
+                            <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+                            <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+                            
+                            <td class="text-center">
+                                <input type="text" name="Name" value="@item.Name" class="form-control form-control-sm" required autocomplete="off" />
+                                <span asp-validation-for="@item.Name" class="text-danger small d-block"></span>
+                            </td>
+                            <td class="text-center">
+                                <input type="text" name="Description" value="@item.Description" class="form-control form-control-sm" required />
+                                <span asp-validation-for="@item.Description" class="text-danger small d-block"></span>
+                            </td>
+                            <td class="text-center">
+                                <input type="number" name="Price" value="@item.Price" min="0" class="form-control form-control-sm" required />
+                                <span asp-validation-for="@item.Price" class="text-danger small d-block"></span>
+                            </td>
+                            <td class="text-center font-weight-bold">
+                                @item.Quantity
+                            </td>
+                            <td class="text-center text-muted small">
+                                @item.LastModified.ToString("dd.MM.yyyy HH:mm")
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Сохранить изменения">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <a href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = ViewBag.SortBy, page = ViewBag.CurrentPage })" class="btn btn-sm btn-secondary" title="Отменить">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </form>
+                    </tr>
+                }
+                else
+                {
+                    <!-- Строка в обычном режиме ОТОБРАЖЕНИЯ -->
+                    <tr>
+                        <td class="text-center font-weight-bold">@item.Name</td>
+                        <td class="text-center text-secondary small">@item.Description</td>
+                        <td class="text-center text-info">@item.Price.ToString("N0") руб.</td>
+                        <td class="text-center">
+                            @if (item.Quantity == 0)
+                            {
+                                <span class="badge bg-danger">Нет на складе</span>
+                            }
+                            else if (item.Quantity < 5)
+                            {
+                                <span class="badge bg-warning text-dark">Мало (@item.Quantity)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary text-white">@item.Quantity шт.</span>
+                            }
+                        </td>
+                        <td class="text-center text-muted small">@item.LastModified.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td class="text-center">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Действия
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <!-- Быстрый приход товара в модальном окне -->
+                                    <li>
+                                        <button class="dropdown-item text-success" data-bs-toggle="modal" data-bs-target="#importModal" data-product-name="@item.Name">
+                                            <i class="bi bi-box-arrow-in-down"></i> Приход товара
+                                        </button>
+                                    </li>
+                                    <!-- Быстрый расход товара в модальном окне -->
+                                    <li>
+                                        <button class="dropdown-item text-warning" data-bs-toggle="modal" data-bs-target="#exportModal" data-product-name="@item.Name" data-max-quantity="@item.Quantity" disabled="@(item.Quantity == 0 ? "disabled" : null)">
+                                            <i class="bi bi-box-arrow-up"></i> Расход товара
+                                        </button>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <!-- Редактировать -->
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Index", new { editId = item.IdItem, searchString = ViewBag.SearchString, sortBy = ViewBag.SortBy, page = ViewBag.CurrentPage })">
+                                            <i class="bi bi-pencil-square"></i> Редактировать
+                                        </a>
+                                    </li>
+                                    <!-- Удалить -->
+                                    <li>
+                                        <form method="post" asp-action="DeleteItem" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить товар &quot;@item.Name&quot;?');">
+                                            <input type="hidden" name="id" value="@item.IdItem" />
+                                            <input type="hidden" name="searchString" value="@ViewBag.SearchString" />
+                                            <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+                                            <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-trash-fill"></i> Удалить товар
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Блок Пагинации -->
+@if (ViewBag.TotalPages > 1)
+{
+    <nav aria-label="Навигация по страницам">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = ViewBag.SortBy, page = ViewBag.CurrentPage - 1 })" aria-label="Назад">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = ViewBag.SortBy, page = i })">@i</a>
+                </li>
+            }
+            <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { searchString = ViewBag.SearchString, sortBy = ViewBag.SortBy, page = ViewBag.CurrentPage + 1 })" aria-label="Вперед">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<hr class="my-5 border-color" />
+
+<!-- Раздел быстрых транзакций внизу страницы -->
+<div class="row">
+    <!-- Форма Прихода -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <h4 class="text-success mb-3"><i class="bi bi-box-arrow-in-down"></i> Приход (Импорт)</h4>
+            <form method="post" asp-action="ImportItem">
+                <input type="hidden" name="searchString" value="@ViewBag.SearchString" />
+                <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+                <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+                
+                <div class="mb-3">
+                    <label class="form-label">Товар</label>
+                    <select name="Name" class="form-select" required>
+                        <option value="" disabled selected>-- Выберите товар --</option>
+                        @if (ViewBag.AllItems != null)
+                        {
+                            foreach (var item in (List<Item>)ViewBag.AllItems)
+                            {
+                                <option value="@item.Name">@item.Name (на складе: @item.Quantity)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Количество</label>
+                    <input type="number" name="Quantity" class="form-control" min="1" required placeholder="Введите количество" />
+                </div>
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-box-arrow-in-down"></i> Провести приход
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма Расхода -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <h4 class="text-danger mb-3"><i class="bi bi-box-arrow-up"></i> Расход (Экспорт)</h4>
+            <form method="post" asp-action="ExportItem">
+                <input type="hidden" name="searchString" value="@ViewBag.SearchString" />
+                <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+                <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+                
+                <div class="mb-3">
+                    <label class="form-label">Товар</label>
+                    <select name="Name" class="form-select" required>
+                        <option value="" disabled selected>-- Выберите товар --</option>
+                        @if (ViewBag.AllItems != null)
+                        {
+                            foreach (var item in (List<Item>)ViewBag.AllItems)
+                            {
+                                <option value="@item.Name" disabled="@(item.Quantity == 0 ? "disabled" : null)">
+                                    @item.Name (на складе: @item.Quantity)
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Количество</label>
+                    <input type="number" name="Quantity" class="form-control" min="1" required placeholder="Введите количество" />
+                </div>
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="bi bi-box-arrow-up"></i> Провести расход
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно Прихода товара -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="bi bi-box-arrow-in-down-fill text-success"></i> Оформить приход товара
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form method="post" asp-action="ImportItem">
+                <div class="modal-body">
+                    <!-- Скрытые параметры состояния и ID товара -->
+                    <input type="hidden" name="Name" id="importProductName" />
+                    <input type="hidden" name="searchString" value="@ViewBag.SearchString" />
+                    <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+                    <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+                    
+                    <p class="mb-3">Товар: <strong id="importProductLabel"></strong></p>
+                    <div class="mb-3">
+                        <label class="form-label">Количество для добавления на склад</label>
+                        <input type="number" name="Quantity" class="form-control" min="1" required placeholder="Например: 50" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">Подтвердить приход</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно Расхода товара -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">
+                    <i class="bi bi-box-arrow-up-fill text-danger"></i> Оформить расход товара
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form method="post" asp-action="ExportItem">
+                <div class="modal-body">
+                    <!-- Скрытые параметры состояния и ID товара -->
+                    <input type="hidden" name="Name" id="exportProductName" />
+                    <input type="hidden" name="searchString" value="@ViewBag.SearchString" />
+                    <input type="hidden" name="sortBy" value="@ViewBag.SortBy" />
+                    <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+                    
+                    <p class="mb-3">Товар: <strong id="exportProductLabel"></strong></p>
+                    <div class="mb-3">
+                        <label class="form-label">Количество для выдачи со склада</label>
+                        <input type="number" name="Quantity" id="exportProductQuantityInput" class="form-control" min="1" required placeholder="Например: 10" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-danger">Подтвердить расход</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Заполнение названия при открытии окна прихода
+            $('#importModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var productName = button.data('product-name');
+                var modal = $(this);
+                modal.find('#importProductName').val(productName);
+                modal.find('#importProductLabel').text(productName);
+                modal.find('input[name="Quantity"]').val(''); // Очищаем поле ввода
+            });
+
+            // Заполнение названия и максимального количества при открытии окна расхода
+            $('#exportModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var productName = button.data('product-name');
+                var maxQuantity = button.data('max-quantity');
+                var modal = $(this);
+                modal.find('#exportProductName').val(productName);
+                modal.find('#exportProductLabel').text(productName);
+                modal.find('#exportProductQuantityInput').val('');
+                modal.find('#exportProductQuantityInput').attr('max', maxQuantity); // Ставим ограничение на клиенте
+            });
+        });
+    </script>
+}

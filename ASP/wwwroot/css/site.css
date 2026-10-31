@@ -1,0 +1,348 @@
+/* 
+   Глобальный файл стилей для складской системы.
+   Использует современную светлую палитру (Slate/Light Gray) с яркими акцентными цветами.
+*/
+
+:root {
+  --bg-primary: #f8fafc;       /* Основной фон (Slate 50) */
+  --bg-secondary: #ffffff;     /* Фон карточек, таблиц и панелей (White) */
+  --bg-tertiary: #f1f5f9;      /* Фон для элементов ввода (Slate 100) */
+  --border-color: #e2e8f0;     /* Границы элементов (Slate 200) */
+  --text-primary: #0f172a;     /* Основной текст (Slate 900) */
+  --text-secondary: #475569;   /* Вторичный текст (Slate 600) */
+  --accent: #2563eb;           /* Акцентный синий цвет (Blue 600) */
+  --accent-hover: #1d4ed8;     /* Акцентный цвет при наведении */
+  --accent-glow: rgba(37, 99, 235, 0.15);
+  
+  --success: #059669;          /* Приход (Emerald 600) */
+  --success-glow: rgba(5, 150, 105, 0.15);
+  --danger: #dc2626;           /* Расход / Удаление (Red 600) */
+  --danger-glow: rgba(220, 38, 38, 0.15);
+  --warning: #d97706;          /* Предупреждение (Amber 600) */
+}
+
+/* Глобальные настройки */
+html, body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', System-UI, -apple-system, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  padding-bottom: 80px; /* Отступ для футера */
+}
+
+/* Стили заголовков */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Навигационная панель (Navbar) */
+.navbar {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.8rem 1.5rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.5px;
+  color: var(--text-primary) !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  color: var(--text-secondary) !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--accent) !important;
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Карточки (Dashboard Cards) */
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Стилизация Таблицы */
+.table-responsive {
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  margin-bottom: 1.5rem;
+}
+
+.table {
+  margin-bottom: 0;
+  color: var(--text-primary);
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background-color: #f8fafc;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  user-select: none;
+}
+
+.table td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover td {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+/* Ссылки сортировки в заголовках */
+.sort-link {
+  color: var(--text-secondary) !important;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.sort-link:hover {
+  color: var(--accent) !important;
+}
+
+/* Поля Ввода (Form Controls) */
+.form-control, .form-select {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: #94a3b8;
+}
+
+/* Кнопки (Buttons) */
+.btn {
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover) !important;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.btn-success {
+  background-color: var(--success) !important;
+  color: #fff !important;
+}
+
+.btn-success:hover {
+  background-color: #047857 !important;
+  box-shadow: 0 4px 12px var(--success-glow);
+}
+
+.btn-danger {
+  background-color: var(--danger) !important;
+  color: #fff !important;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c !important;
+  box-shadow: 0 4px 12px var(--danger-glow);
+}
+
+.btn-secondary {
+  background-color: #f1f5f9 !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Модальные окна (Modals) */
+.modal-content {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 14px !important;
+  color: var(--text-primary);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 1.2rem 1.5rem !important;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color) !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+/* Пагинация (Pagination) */
+.pagination {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.page-item {
+  list-style: none;
+}
+
+.page-link {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease;
+  text-decoration: none !important;
+  display: block;
+}
+
+.page-link:hover {
+  color: var(--accent) !important;
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.page-item.active .page-link {
+  background-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 10px var(--accent-glow);
+}
+
+.page-item.disabled .page-link {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Бейджики (Badges) */
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.badge-import {
+  background-color: rgba(5, 150, 105, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.badge-export {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+/* Футер */
+footer {
+  background-color: #ffffff;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary) !important;
+  padding: 1.2rem 0;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+footer a {
+  color: var(--accent) !important;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Анимация переходов */
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,55 @@
+@model ASP.Models.Item
+@{
+    ViewData["Title"] = "Добавить новый товар";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <!-- Заголовок карточки -->
+            <h3 class="mb-4 text-center text-primary">
+                <i class="bi bi-plus-circle-fill"></i> Добавление товара
+            </h3>
+            
+            <form method="post" asp-action="AddItem">
+                <!-- Название товара -->
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label font-weight-bold">Название товара</label>
+                    <input asp-for="Name" class="form-control" placeholder="Например: Стол офисный" autocomplete="off" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                
+                <!-- Описание товара -->
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label font-weight-bold">Описание товара</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Введите технические характеристики или примечания"></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+                
+                <!-- Цена -->
+                <div class="mb-3">
+                    <label asp-for="Price" class="form-label font-weight-bold">Цена (руб.)</label>
+                    <input asp-for="Price" class="form-control" type="number" min="0" placeholder="Укажите цену товара" />
+                    <span asp-validation-for="Price" class="text-danger small"></span>
+                </div>
+                
+                <!-- Начальное количество -->
+                <div class="mb-3">
+                    <label asp-for="Quantity" class="form-label font-weight-bold">Начальное количество на складе</label>
+                    <input asp-for="Quantity" class="form-control" type="number" min="0" placeholder="Укажите количество на складе" />
+                    <span asp-validation-for="Quantity" class="text-danger small"></span>
+                </div>
+                
+                <!-- Кнопки управления -->
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Добавить товар
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
